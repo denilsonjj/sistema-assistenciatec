@@ -122,9 +122,12 @@
 
 .login-header {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  justify-content: center;
   margin-bottom: 16px;
+}
+
+.login-title-container {
+  text-align: center;
 }
 
 .login-logo {
