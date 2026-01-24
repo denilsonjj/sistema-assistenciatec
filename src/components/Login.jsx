@@ -15,7 +15,7 @@ function Login({ onSubmit, loading, notice }) {
       <div className="login-card">
         <div className="login-header">
           <div>
-            <div className="login-title">Sistema de Assistencia</div>
+            <div className="login-title">Sistema Interno D-tec</div>
             <div className="login-subtitle">Acesse com suas credenciais</div>
           </div>
         </div>
