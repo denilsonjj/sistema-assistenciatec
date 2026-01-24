@@ -9,7 +9,7 @@ const parseValue = (value) => {
   return Number.isNaN(numeric) ? 0 : numeric;
 };
 
-function EstimateForm() {
+function EstimateForm({ onBack }) {
   const [client, setClient] = useState({ name: '', contact: '' });
   const [services, setServices] = useState([createService()]);
 
@@ -29,7 +29,10 @@ function EstimateForm() {
     setServices((prev) => [...prev, createService()]);
   };
 
-  const handlePrint = () => {
+  const handlePrint = (mode = 'thermal58') => {
+    const pageWidth = mode === 'thermal38' ? '38mm' : '58mm';
+    const fontSize = mode === 'thermal38' ? '10px' : '11px';
+    
     const itemsHtml = services
       .filter((item) => item.desc || item.value)
       .map((item) => {
@@ -45,12 +48,16 @@ function EstimateForm() {
           <meta charset="UTF-8" />
           <title>Orcamento</title>
           <style>
-            body { font-family: Arial, sans-serif; font-size: 11px; }
-            .cupom { width: 58mm; margin: 0 auto; }
+            body { font-family: Arial, sans-serif; font-size: ${fontSize}; }
+            .cupom { width: ${pageWidth}; margin: 0 auto; }
             .center { text-align: center; }
             .line { border-top: 1px dashed #333; margin: 6px 0; }
             .bold { font-weight: bold; }
             table { width: 100%; }
+            @media print {
+              @page { size: ${pageWidth} auto; margin: 6mm; }
+              body { margin: 0; }
+            }
           </style>
         </head>
         <body>
@@ -146,7 +153,9 @@ function EstimateForm() {
         </div>
 
         <div className="form-actions">
-          <button className="btn btn-accent" type="button" onClick={handlePrint}>Imprimir 58mm</button>
+          <button className="btn btn-accent" type="button" onClick={() => handlePrint('thermal58')}>Imprimir 58mm</button>
+          <button className="btn btn-accent" type="button" onClick={() => handlePrint('thermal38')}>Imprimir 38mm</button>
+          <button className="btn btn-muted" type="button" onClick={onBack}>Voltar</button>
         </div>
       </div>
     </div>

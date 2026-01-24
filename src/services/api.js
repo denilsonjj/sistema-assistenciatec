@@ -100,3 +100,27 @@ export async function saveOrder(payload) {
   }
   return data;
 }
+
+export async function deleteOrder(orderId) {
+  const url = buildApiUrl(true);
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'text/plain;charset=utf-8',
+    },
+    body: JSON.stringify({
+      action: 'delete',
+      id: orderId,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Falha ao deletar OS: ${response.status}`);
+  }
+
+  const data = await response.json();
+  if (data && data.ok === false) {
+    throw new Error(data.message || 'Token invalido.');
+  }
+  return data;
+}

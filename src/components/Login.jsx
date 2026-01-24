@@ -14,7 +14,6 @@ function Login({ onSubmit, loading, notice }) {
     <div className="login-page">
       <div className="login-card">
         <div className="login-header">
-          <img className="login-logo" src="/logo.png" alt="D-Tech" />
           <div>
             <div className="login-title">Sistema de Assistencia</div>
             <div className="login-subtitle">Acesse com suas credenciais</div>

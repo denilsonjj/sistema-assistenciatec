@@ -15,7 +15,7 @@ const emptyForm = {
   valor: '',
 };
 
-function BuyPhoneForm() {
+function BuyPhoneForm({ onBack }) {
   const [form, setForm] = useState(emptyForm);
   const [images, setImages] = useState({
     rgFrente: '',
@@ -33,11 +33,28 @@ function BuyPhoneForm() {
     reader.readAsDataURL(file);
   };
 
-  const handlePrint = () => {
+  const handlePrint = (mode = 'a4') => {
     const dataHora = new Date().toLocaleString('pt-BR');
+    let pageSize = 'A4';
+    let pageWidth = '210mm';
+    let fontSize = '12px';
+    
+    if (mode === 'thermal58') {
+      pageSize = '58mm auto';
+      pageWidth = '58mm';
+      fontSize = '9px';
+    }
+    if (mode === 'thermal38') {
+      pageSize = '38mm auto';
+      pageWidth = '38mm';
+      fontSize = '8px';
+    }
+    
     const imgBlock = (src, label) => {
-      return `<div style="text-align:center;font-size:10px;">
-        <img src="${src || ''}" style="width: 100%; max-width: 230px; height: 144px; object-fit: cover; border: 2px solid #ccc; border-radius: 8px;" />
+      const imgWidth = mode === 'thermal38' ? '80px' : mode === 'thermal58' ? '120px' : '230px';
+      const imgHeight = mode === 'thermal38' ? '60px' : mode === 'thermal58' ? '80px' : '144px';
+      return `<div style="text-align:center;font-size:${mode === 'thermal38' ? '7px' : '9px'};">
+        <img src="${src || ''}" style="width: 100%; max-width: ${imgWidth}; height: ${imgHeight}; object-fit: cover; border: 1px solid #ccc; border-radius: 4px;" />
         <div>${label}</div>
       </div>`;
     };
@@ -49,16 +66,16 @@ function BuyPhoneForm() {
           <meta charset="UTF-8" />
           <title>Termo de Compra</title>
           <style>
-            @page { size: A4 portrait; margin: 10mm; }
-            body { font-family: Arial, sans-serif; font-size: 12px; color: #1a1a1a; margin: 0; }
-            header { background: linear-gradient(90deg, #001f4d, #004aad); color: #fff; padding: 12px 16px; }
-            header h1 { margin: 0; font-size: 18px; }
-            header p { margin: 3px 0; font-size: 11px; }
-            .section { margin: 14px 0; padding: 12px; border: 1px solid #e1e8f2; border-radius: 6px; background: #f8faff; }
-            .section-title { color: #001f4d; font-weight: bold; border-bottom: 1px solid #ccd6e8; margin-bottom: 8px; font-size: 13px; }
-            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 15px; }
-            .imagens { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-top: 12px; }
-            footer { text-align: center; font-size: 9px; color: #555; margin-top: 25px; border-top: 1px solid #ccc; padding-top: 10px; }
+            @page { size: ${pageSize}; margin: 6mm; }
+            body { font-family: Arial, sans-serif; font-size: ${fontSize}; color: #1a1a1a; margin: 0; }
+            header { background: linear-gradient(90deg, #001f4d, #004aad); color: #fff; padding: ${mode === 'thermal38' ? '6px 8px' : '12px 16px'}; }
+            header h1 { margin: 0; font-size: ${mode === 'thermal38' ? '12px' : mode === 'thermal58' ? '14px' : '18px'}; }
+            header p { margin: 2px 0; font-size: ${mode === 'thermal38' ? '7px' : mode === 'thermal58' ? '8px' : '11px'}; }
+            .section { margin: ${mode === 'thermal38' ? '6px 0' : '14px 0'}; padding: ${mode === 'thermal38' ? '6px' : '12px'}; border: 1px solid #e1e8f2; border-radius: 4px; background: #f8faff; }
+            .section-title { color: #001f4d; font-weight: bold; border-bottom: 1px solid #ccd6e8; margin-bottom: 4px; font-size: ${mode === 'thermal38' ? '8px' : mode === 'thermal58' ? '10px' : '13px'}; }
+            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: ${mode === 'thermal38' ? '2px 4px' : '8px 15px'}; }
+            .imagens { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: ${mode === 'thermal38' ? '6px' : mode === 'thermal58' ? '10px' : '20px'}; margin-top: ${mode === 'thermal38' ? '4px' : '12px'}; }
+            footer { text-align: center; font-size: ${mode === 'thermal38' ? '6px' : mode === 'thermal58' ? '8px' : '9px'}; color: #555; margin-top: ${mode === 'thermal38' ? '10px' : '25px'}; border-top: 1px solid #ccc; padding-top: ${mode === 'thermal38' ? '4px' : '10px'}; }
           </style>
         </head>
         <body>
@@ -66,7 +83,7 @@ function BuyPhoneForm() {
             <h1>D-Tech Utilities & Tools</h1>
             <p>CNPJ: 37.183.737/0001-05</p>
             <p>Rua do Cruzeiro, 10 - Centro, Capela do Alto - SP</p>
-            <div style="text-align:right;font-size:10px;">Emitido em: ${dataHora}</div>
+            <div style="text-align:right;font-size:${mode === 'thermal38' ? '6px' : mode === 'thermal58' ? '8px' : '10px'};">Emitido em: ${dataHora}</div>
           </header>
 
           <div class="section">
@@ -102,6 +119,7 @@ function BuyPhoneForm() {
             </div>
           </div>
 
+          ${mode === 'a4' ? `
           <div class="section">
             <div class="section-title">Termo de Responsabilidade</div>
             <div style="font-size:11px; line-height:1.5;">
@@ -114,6 +132,7 @@ function BuyPhoneForm() {
             <div style="height:80px; border-bottom:2px solid #000; width:320px; margin:0 auto;"></div>
             <br><b>Assinatura do Vendedor</b>
           </div>
+          ` : ''}
 
           <footer>Documento gerado automaticamente pelo Sistema Interno D-Tech</footer>
         </body>
@@ -215,7 +234,10 @@ function BuyPhoneForm() {
         </div>
 
         <div className="form-actions">
-          <button className="btn btn-accent" type="button" onClick={handlePrint}>Imprimir Termo</button>
+          <button className="btn btn-accent" type="button" onClick={() => handlePrint('a4')}>Imprimir A4</button>
+          <button className="btn btn-accent" type="button" onClick={() => handlePrint('thermal58')}>Imprimir 58mm</button>
+          <button className="btn btn-accent" type="button" onClick={() => handlePrint('thermal38')}>Imprimir 38mm</button>
+          <button className="btn btn-muted" type="button" onClick={onBack}>Voltar</button>
         </div>
       </div>
     </div>

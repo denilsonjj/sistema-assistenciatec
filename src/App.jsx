@@ -3,6 +3,7 @@ import {
   fetchOrders,
   login,
   saveOrder,
+  deleteOrder,
   getStoredToken,
   setStoredToken,
 } from './services/api';
@@ -59,24 +60,61 @@ function App() {
   }, [isAuthenticated]);
 
   useEffect(() => {
-    if (isAuthenticated && view === 'list') {
+    if (isAuthenticated && (view === 'list' || view === 'closeOrder')) {
       loadOrders(false);
     }
   }, [isAuthenticated, view]);
+
+  // Calcular valor total automaticamente quando peça ou mão de obra mudam
+  useEffect(() => {
+    const parseValue = (val) => {
+      if (!val) return 0;
+      const num = Number(String(val).replace(/[^0-9,-]/g, '').replace(',', '.'));
+      return Number.isNaN(num) ? 0 : num;
+    };
+    const peca = parseValue(form.valorPeca);
+    const maoDobra = parseValue(form.valorMaoDeObra);
+    const total = peca + maoDobra;
+    const formattedTotal = total > 0 ? `R$ ${total.toFixed(2).replace('.', ',')}` : '';
+    
+    if (form.valor !== formattedTotal) {
+      setForm((prev) => ({ ...prev, valor: formattedTotal }));
+    }
+  }, [form.valorPeca, form.valorMaoDeObra]);
 
   const filteredOrders = useMemo(() => {
     const term = search.trim().toLowerCase();
     if (!term) return orders;
     return orders.filter((order) => {
+      const extras = order.extras || {};
       return (
         String(order.id || '').toLowerCase().includes(term) ||
-        String(order.cliente || '').toLowerCase().includes(term)
+        String(order.cliente || '').toLowerCase().includes(term) ||
+        String(extras.cpf || '').toLowerCase().includes(term)
       );
     });
   }, [orders, search]);
 
   const handleFieldChange = (field) => (event) => {
-    setForm((prev) => ({ ...prev, [field]: event.target.value }));
+    const value = event.target.value;
+    setForm((prev) => {
+      const updated = { ...prev, [field]: value };
+      
+      // Recalcular valor total se peça ou mão de obra mudou
+      if (field === 'valorPeca' || field === 'valorMaoDeObra') {
+        const parseValue = (val) => {
+          if (!val) return 0;
+          const num = Number(String(val).replace(/[^0-9,-]/g, '').replace(',', '.'));
+          return Number.isNaN(num) ? 0 : num;
+        };
+        const peca = parseValue(updated.valorPeca);
+        const maoDobra = parseValue(updated.valorMaoDeObra);
+        const total = peca + maoDobra;
+        updated.valor = total > 0 ? `R$ ${total.toFixed(2).replace('.', ',')}` : '';
+      }
+      
+      return updated;
+    });
   };
 
   const handleChecklistStatusChange = (index, status) => {
@@ -88,6 +126,15 @@ function App() {
         status,
         note: shouldClearNote ? '' : current.note,
       };
+
+      // Se a opção 4 (índice 3) é "não", marcar o resto como "não"
+      if (index === 3 && status === 'nao') {
+        // Marcar todos os itens após o índice 3 como "não"
+        for (let i = 4; i < next.length; i++) {
+          next[i] = { status: 'nao', note: '' };
+        }
+      }
+
       return { ...prev, checklist: next };
     });
   };
@@ -101,16 +148,11 @@ function App() {
     });
   };
 
-  const handlePatternToggle = (index) => {
-    setForm((prev) => {
-      const next = new Set(prev.padrao || []);
-      if (next.has(index)) {
-        next.delete(index);
-      } else {
-        next.add(index);
-      }
-      return { ...prev, padrao: Array.from(next) };
-    });
+  const handlePatternToggle = (pattern) => {
+    setForm((prev) => ({
+      ...prev,
+      padrao: pattern,
+    }));
   };
 
   const loadOrders = async (silent) => {
@@ -188,6 +230,28 @@ function App() {
     setForm(toFormFromOrder(order));
     setView('openOrder');
     setSidebarOpen(false);
+  };
+
+  const handleDelete = async (order) => {
+    if (!window.confirm(`Tem certeza que deseja deletar a OS ${order.id}?`)) {
+      return;
+    }
+
+    setSaving(true);
+    setNotice(null);
+    try {
+      await deleteOrder(order.id);
+      setNotice({ type: 'success', text: `OS ${order.id} deletada com sucesso.` });
+      await loadOrders(false);
+    } catch (error) {
+      setNotice({ type: 'error', text: error.message });
+      if (String(error.message || '').toLowerCase().includes('token')) {
+        setStoredToken('');
+        setIsAuthenticated(false);
+      }
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleResetForm = () => {
@@ -274,10 +338,12 @@ function App() {
             <div className="topbar-title">{pageTitle}</div>
           </header>
           <Notice notice={notice} />
-          {view === 'dashboard' ? <Dashboard onNavigate={handleNavigate} /> : null}
+          {/* Dashboard oculto temporariamente */}
+          {/* {view === 'dashboard' ? <Dashboard onNavigate={handleNavigate} /> : null} */}
           {view === 'openOrder' ? (
             <OsForm
               form={form}
+              orders={orders}
               statusOptions={STATUS_OPTIONS}
               checklistItems={CHECKLIST_ITEMS}
               saving={saving}
@@ -302,12 +368,13 @@ function App() {
               onExport={handleExport}
               onEdit={handleEdit}
               onPrint={handlePrint}
+              onDelete={handleDelete}
             />
           ) : null}
-          {view === 'estimate' ? <EstimateForm /> : null}
-          {view === 'warranty' ? <WarrantyForm /> : null}
-          {view === 'closeOrder' ? <CloseOrderForm /> : null}
-          {view === 'buyPhone' ? <BuyPhoneForm /> : null}
+          {view === 'estimate' ? <EstimateForm onBack={() => handleNavigate('dashboard')} /> : null}
+          {view === 'warranty' ? <WarrantyForm onBack={() => handleNavigate('dashboard')} /> : null}
+          {view === 'closeOrder' ? <CloseOrderForm orders={orders} onBack={() => handleNavigate('dashboard')} /> : null}
+          {view === 'buyPhone' ? <BuyPhoneForm onBack={() => handleNavigate('dashboard')} /> : null}
         </main>
       </div>
     </div>

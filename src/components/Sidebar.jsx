@@ -1,5 +1,5 @@
 ﻿const NAV_ITEMS = [
-  { id: 'dashboard', label: 'Dashboard' },
+  // { id: 'dashboard', label: 'Dashboard' }, // Oculto temporariamente
   { id: 'openOrder', label: 'Abrir OS' },
   { id: 'list', label: 'Listagem OS' },
   { id: 'closeOrder', label: 'Finalizar OS' },

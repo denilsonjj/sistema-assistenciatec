@@ -3,6 +3,39 @@ import { formatCurrency, formatDate, normalizeDateInput } from './format';
 
 const DEFAULT_PAYMENT = 'Pix';
 
+/**
+ * Gera número de OS no formato AAAAMMDD-SEQ
+ * Incrementa automaticamente baseado nas OSs já existentes
+ * @param {Array} existingOrders - Array de OSs já criadas
+ * @returns {string} - Número de OS formatado (ex: 20260124-001)
+ */
+export const generateOsNumber = (existingOrders = []) => {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  const todayPrefix = `${year}${month}${day}`;
+
+  // Filtrar OSs de hoje
+  const todayOrders = existingOrders.filter((order) => {
+    const osPrefix = String(order.id || '').substring(0, 8);
+    return osPrefix === todayPrefix;
+  });
+
+  // Extrair números sequenciais
+  const sequences = todayOrders
+    .map((order) => {
+      const match = String(order.id || '').match(/-(\d{3})$/);
+      return match ? parseInt(match[1], 10) : 0;
+    })
+    .filter((seq) => !Number.isNaN(seq));
+
+  // Encontrar o próximo número
+  const nextSequence = sequences.length > 0 ? Math.max(...sequences) + 1 : 1;
+  const seq = String(nextSequence).padStart(3, '0');
+  return `${todayPrefix}-${seq}`;
+};
+
 export const createEmptyChecklist = () =>
   CHECKLIST_ITEMS.map(() => ({ status: '', note: '' }));
 
@@ -19,6 +52,8 @@ export const createEmptyForm = () => ({
   padrao: [],
   defeito: '',
   servico: '',
+  valorPeca: '',
+  valorMaoDeObra: '',
   valor: '',
   pagamento: DEFAULT_PAYMENT,
   status: 'Aberta',
@@ -222,6 +257,8 @@ export const toFormFromOrder = (order) => {
     padrao: Array.isArray(extras.padrao) ? extras.padrao : [],
     defeito: order.defeito || '',
     servico: order.servico || '',
+    valorPeca: extras.valorPeca || '',
+    valorMaoDeObra: extras.valorMaoDeObra || '',
     valor: order.valor || '',
     pagamento: extras.pagamento || DEFAULT_PAYMENT,
     status: order.status || 'Aberta',
@@ -238,6 +275,9 @@ const buildObsPayload = (form) => ({
   pagamento: form.pagamento || DEFAULT_PAYMENT,
   dataTermino: form.dataTermino || '',
   senha: form.senha || '',
+  valorPeca: form.valorPeca || '',
+  valorMaoDeObra: form.valorMaoDeObra || '',
+  cpf: form.contato || '', // Usando contato como CPF para busca
   padrao: Array.isArray(form.padrao) ? form.padrao : [],
   checklist: normalizeChecklist(form.checklist),
 });
@@ -302,6 +342,63 @@ const buildChecklistRows = (checklist, onlyIssues) => {
     .join('');
 };
 
+const buildPatternHtml = (pattern, mode) => {
+  if (!pattern || !Array.isArray(pattern) || pattern.length === 0) {
+    return '';
+  }
+
+  const size = mode === 'a4' ? 180 : 100;
+  const dotRadius = size / 10;
+  const gridSize = 3;
+  const cellSize = size / gridSize;
+
+  let svg = `<svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" style="margin: 8px auto; display: block;">`;
+  
+  // Desenha fundo
+  svg += `<rect width="${size}" height="${size}" fill="#f9f9f9" stroke="#ddd" stroke-width="1" />`;
+
+  // Desenha linhas conectando os pontos
+  if (pattern.length > 1) {
+    svg += '<g stroke="#FF6B6B" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">';
+    for (let i = 0; i < pattern.length - 1; i++) {
+      const from = pattern[i] - 1;
+      const to = pattern[i + 1] - 1;
+      const fromRow = Math.floor(from / gridSize);
+      const fromCol = from % gridSize;
+      const toRow = Math.floor(to / gridSize);
+      const toCol = to % gridSize;
+      const x1 = fromCol * cellSize + cellSize / 2;
+      const y1 = fromRow * cellSize + cellSize / 2;
+      const x2 = toCol * cellSize + cellSize / 2;
+      const y2 = toRow * cellSize + cellSize / 2;
+      svg += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" />`;
+    }
+    svg += '</g>';
+  }
+
+  // Desenha os pontos
+  for (let i = 1; i <= 9; i++) {
+    const row = Math.floor((i - 1) / gridSize);
+    const col = (i - 1) % gridSize;
+    const x = col * cellSize + cellSize / 2;
+    const y = row * cellSize + cellSize / 2;
+    const isStart = pattern[0] === i;
+    const position = pattern.indexOf(i);
+    const isInPath = position !== -1;
+
+    // Ponto de fundo
+    svg += `<circle cx="${x}" cy="${y}" r="${dotRadius}" fill="${isStart ? '#FF6B6B' : isInPath ? 'rgba(255, 107, 107, 0.3)' : '#e8e8e8'}" stroke="${isInPath ? '#FF6B6B' : '#ccc'}" stroke-width="1" />`;
+
+    // Número da sequência
+    if (isInPath) {
+      svg += `<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-size="${dotRadius * 1.5}" font-weight="bold" fill="${isStart ? '#fff' : '#FF6B6B'}">${position + 1}</text>`;
+    }
+  }
+
+  svg += '</svg>';
+  return svg;
+};
+
 export const buildPrintHtml = (order, mode) => {
   const checklist = normalizeChecklist(order.extras?.checklist || []);
   const notes = order.obs || order.extras?.notes || '';
@@ -309,16 +406,36 @@ export const buildPrintHtml = (order, mode) => {
   const recado = order.extras?.recado || '';
   const pagamento = order.extras?.pagamento || '';
   const dataTermino = order.extras?.dataTermino || '';
+  const padrao = order.extras?.padrao || [];
+  
+  let pageWidth = '210mm';
+  let pageSize = 'A4';
+  let fontSize = '13px';
+  let checklistFontSize = '12px';
+  
+  if (mode === 'thermal58') {
+    pageWidth = '58mm';
+    pageSize = '58mm auto';
+    fontSize = '11px';
+    checklistFontSize = '10px';
+  }
+  if (mode === 'thermal38') {
+    pageWidth = '38mm';
+    pageSize = '38mm auto';
+    fontSize = '10px';
+    checklistFontSize = '9px';
+  }
+  
   const baseStyles = `
     body { font-family: Arial, sans-serif; color: #111; }
     h1, h2 { margin: 0 0 8px; }
-    .print-body { margin: 0 auto; width: ${mode === 'thermal' ? '58mm' : '210mm'}; }
+    .print-body { margin: 0 auto; width: ${pageWidth}; }
     .divider { border-bottom: 1px dashed #999; margin: 8px 0; }
-    .line { display: flex; justify-content: space-between; font-size: ${mode === 'thermal' ? '11px' : '13px'}; }
+    .line { display: flex; justify-content: space-between; font-size: ${fontSize}; }
     .block { margin-bottom: 8px; }
-    .check-item { font-size: ${mode === 'thermal' ? '10px' : '12px'}; margin-bottom: 4px; }
+    .check-item { font-size: ${checklistFontSize}; margin-bottom: 4px; }
     @media print {
-      @page { size: ${mode === 'thermal' ? '58mm auto' : 'A4'}; margin: 6mm; }
+      @page { size: ${pageSize}; margin: 6mm; }
       body { margin: 0; }
     }
   `;
@@ -334,6 +451,12 @@ export const buildPrintHtml = (order, mode) => {
     <strong>Checklist - Itens em atencao</strong>
     <div class="block">${buildChecklistRows(checklist, true) || '<div>-</div>'}</div>
   `;
+
+  const patternSection = padrao.length > 0 ? `
+    <div class="divider"></div>
+    <strong>Padrão de Desbloqueio</strong>
+    ${buildPatternHtml(padrao, mode)}
+  ` : '';
 
   return `
     <!doctype html>
@@ -362,6 +485,7 @@ export const buildPrintHtml = (order, mode) => {
             <div class="line"><span>Status:</span><span>${order.status || '-'}</span></div>
           </div>
           ${checklistSection}
+          ${patternSection}
           <div class="divider"></div>
           <div class="block">
             <strong>Observacoes</strong>

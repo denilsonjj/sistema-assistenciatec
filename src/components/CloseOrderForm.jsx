@@ -9,19 +9,45 @@ const parseValue = (value) => {
   return Number.isNaN(numeric) ? 0 : numeric;
 };
 
-function CloseOrderForm() {
+function CloseOrderForm({ orders = [], onBack }) {
+  const [selectedOrderId, setSelectedOrderId] = useState('');
   const [form, setForm] = useState({
     os: '',
     data: new Date().toISOString().slice(0, 10),
     nome: '',
     cpf: '',
+    contato: '',
+    valor: '',
     pagamento: 'Pix',
   });
   const [services, setServices] = useState([createService()]);
 
+  // Buscar dados da OS quando uma é selecionada
+  const handleOrderSelect = (event) => {
+    const orderId = event.target.value;
+    setSelectedOrderId(orderId);
+
+    const selectedOrder = orders.find((order) => order.id === orderId);
+    if (selectedOrder) {
+      const extras = selectedOrder.extras || {};
+      setForm({
+        os: selectedOrder.id || '',
+        data: selectedOrder.data ? selectedOrder.data.split('-').join('-') : new Date().toISOString().slice(0, 10),
+        nome: selectedOrder.cliente || '',
+        cpf: extras.cpf || '',
+        contato: selectedOrder.contato || '',
+        valor: selectedOrder.valor || '',
+        pagamento: selectedOrder.pagamento || 'Pix',
+      });
+      setServices([createService()]);
+    }
+  };
+
   const total = useMemo(() => {
-    return services.reduce((sum, item) => sum + parseValue(item.value), 0);
-  }, [services]);
+    const servicesTotal = services.reduce((sum, item) => sum + parseValue(item.value), 0);
+    const osValue = parseValue(form.valor);
+    return servicesTotal + osValue;
+  }, [services, form.valor]);
 
   const updateService = (index, field, value) => {
     setServices((prev) => {
@@ -35,7 +61,10 @@ function CloseOrderForm() {
     setServices((prev) => [...prev, createService()]);
   };
 
-  const handlePrint = () => {
+  const handlePrint = (mode = 'thermal58') => {
+    const pageWidth = mode === 'thermal38' ? '38mm' : '58mm';
+    const fontSize = mode === 'thermal38' ? '10px' : '11px';
+    
     const itemsHtml = services
       .filter((item) => item.desc || item.value)
       .map((item) => {
@@ -53,13 +82,17 @@ function CloseOrderForm() {
           <meta charset="UTF-8" />
           <title>Cupom OS</title>
           <style>
-            body { font-family: Arial, sans-serif; font-size: 11px; }
-            .cupom { width: 58mm; margin: 0 auto; }
+            body { font-family: Arial, sans-serif; font-size: ${fontSize}; }
+            .cupom { width: ${pageWidth}; margin: 0 auto; }
             .center { text-align: center; }
             .line { border-top: 1px dashed #333; margin: 6px 0; }
             .bold { font-weight: bold; }
             table { width: 100%; }
-            footer { font-size: 10px; text-align: justify; }
+            footer { font-size: 9px; text-align: justify; }
+            @media print {
+              @page { size: ${pageWidth} auto; margin: 6mm; }
+              body { margin: 0; }
+            }
           </style>
         </head>
         <body>
@@ -115,6 +148,22 @@ function CloseOrderForm() {
 
       <div className="page-card">
         <div className="form-grid">
+          <label className="field full">
+            <span>Selecione uma OS</span>
+            <select
+              className="input"
+              value={selectedOrderId}
+              onChange={handleOrderSelect}
+            >
+              <option value="">-- Selecione uma OS --</option>
+              {orders.map((order) => (
+                <option key={order.id} value={order.id}>
+                  {order.id} - {order.cliente || 'Sem nome'}
+                </option>
+              ))}
+            </select>
+          </label>
+
           <label className="field">
             <span>Numero OS</span>
             <input
@@ -122,6 +171,7 @@ function CloseOrderForm() {
               value={form.os}
               onChange={(event) => setForm({ ...form, os: event.target.value })}
               placeholder="2025-001"
+              readOnly
             />
           </label>
           <label className="field">
@@ -149,6 +199,24 @@ function CloseOrderForm() {
               value={form.cpf}
               onChange={(event) => setForm({ ...form, cpf: event.target.value })}
               placeholder="000.000.000-00"
+            />
+          </label>
+          <label className="field">
+            <span>Telefone / Contato</span>
+            <input
+              className="input"
+              value={form.contato}
+              onChange={(event) => setForm({ ...form, contato: event.target.value })}
+              placeholder="(00) 90000-0000"
+            />
+          </label>
+          <label className="field">
+            <span>Valor OS</span>
+            <input
+              className="input"
+              value={form.valor}
+              onChange={(event) => setForm({ ...form, valor: event.target.value })}
+              placeholder="R$ 0,00"
             />
           </label>
           <label className="field">
@@ -194,7 +262,9 @@ function CloseOrderForm() {
         </div>
 
         <div className="form-actions">
-          <button className="btn btn-accent" type="button" onClick={handlePrint}>Imprimir 58mm</button>
+          <button className="btn btn-accent" type="button" onClick={() => handlePrint('thermal58')}>Imprimir 58mm</button>
+          <button className="btn btn-accent" type="button" onClick={() => handlePrint('thermal38')}>Imprimir 38mm</button>
+          <button className="btn btn-muted" type="button" onClick={onBack}>Voltar</button>
         </div>
       </div>
     </div>
@@ -202,6 +272,3 @@ function CloseOrderForm() {
 }
 
 export default CloseOrderForm;
-
-
-

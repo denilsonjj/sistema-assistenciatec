@@ -1,5 +1,10 @@
-﻿function OsForm({
+﻿import { useEffect, useState } from 'react';
+import { generateOsNumber } from '../utils/orders';
+import PatternDrawer from './PatternDrawer';
+
+function OsForm({
   form,
+  orders = [],
   statusOptions,
   checklistItems,
   saving,
@@ -14,6 +19,18 @@
   onResetForm,
 }) {
   const lastChecklistIndex = checklistItems.length - 1;
+
+  // Gerar número OS automaticamente quando o componente é montado
+  useEffect(() => {
+    if (!form.id) {
+      onFieldChange('id')({ target: { value: generateOsNumber(orders) } });
+    }
+  }, []);
+
+  const handleGenerateNewOsNumber = () => {
+    const newNumber = generateOsNumber(orders);
+    onFieldChange('id')({ target: { value: newNumber } });
+  };
 
   const shouldShowNote = (item, index) => {
     if (index === lastChecklistIndex) return item.status !== '';
@@ -40,13 +57,24 @@
               <div className="form-grid">
                 <label className="field">
                   <span>Numero OS</span>
-                  <input
-                    className="input"
-                    type="text"
-                    value={form.id}
-                    onChange={onFieldChange('id')}
-                    placeholder="Auto"
-                  />
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                    <input
+                      className="input"
+                      type="text"
+                      value={form.id}
+                      onChange={onFieldChange('id')}
+                      placeholder="Auto"
+                      style={{ flex: 1 }}
+                    />
+                    <button
+                      className="btn btn-outline"
+                      type="button"
+                      onClick={handleGenerateNewOsNumber}
+                      style={{ whiteSpace: 'nowrap', marginTop: '4px' }}
+                    >
+                      Gerar
+                    </button>
+                  </div>
                 </label>
                 <label className="field">
                   <span>Data de Abertura</span>
@@ -87,13 +115,13 @@
                   />
                 </label>
                 <label className="field">
-                  <span>Celular</span>
+                  <span>Celular / CPF</span>
                   <input
                     className="input"
                     type="text"
                     value={form.contato}
                     onChange={onFieldChange('contato')}
-                    placeholder="(00) 90000-0000"
+                    placeholder="(00) 90000-0000 ou CPF"
                   />
                 </label>
                 <label className="field">
@@ -149,13 +177,34 @@
                   />
                 </label>
                 <label className="field">
-                  <span>Valor</span>
+                  <span>Valor da Peça</span>
+                  <input
+                    className="input"
+                    type="text"
+                    value={form.valorPeca}
+                    onChange={onFieldChange('valorPeca')}
+                    placeholder="R$ 0,00"
+                  />
+                </label>
+                <label className="field">
+                  <span>Valor da Mão de Obra</span>
+                  <input
+                    className="input"
+                    type="text"
+                    value={form.valorMaoDeObra}
+                    onChange={onFieldChange('valorMaoDeObra')}
+                    placeholder="R$ 0,00"
+                  />
+                </label>
+                <label className="field">
+                  <span>Valor Total</span>
                   <input
                     className="input"
                     type="text"
                     value={form.valor}
-                    onChange={onFieldChange('valor')}
+                    readOnly
                     placeholder="R$ 0,00"
+                    style={{ backgroundColor: '#f0f0f0', cursor: 'not-allowed' }}
                   />
                 </label>
                 <label className="field">
@@ -180,21 +229,11 @@
                     placeholder="Digite a senha/PIN"
                   />
                 </div>
-                <div className="pattern-box">
-                  <div className="pattern-title">Padrao de Desbloqueio</div>
-                  <div className="pattern-grid">
-                    {Array.from({ length: 9 }).map((_, index) => (
-                      <button
-                        type="button"
-                        key={`pattern-${index + 1}`}
-                        className={`pattern-dot ${form.padrao.includes(index + 1) ? 'active' : ''}`}
-                        onClick={() => onPatternToggle(index + 1)}
-                        aria-label={`Padrao ${index + 1}`}
-                      />
-                    ))}
-                  </div>
-                </div>
               </div>
+              <PatternDrawer 
+                pattern={form.padrao} 
+                onPatternChange={onPatternToggle}
+              />
             </div>
           </div>
 
@@ -216,7 +255,7 @@
                         checked={entry.status === 'ok'}
                         onChange={() => onChecklistStatusChange(index, 'ok')}
                       />
-                      <span>Ok</span>
+                      <span title="Ok">✅</span>
                     </label>
                     <label className="checklist-choice">
                       <input
@@ -226,7 +265,7 @@
                         checked={entry.status === 'alerta'}
                         onChange={() => onChecklistStatusChange(index, 'alerta')}
                       />
-                      <span>Atencao</span>
+                      <span title="Atenção">⚠️</span>
                     </label>
                     <label className="checklist-choice">
                       <input
@@ -236,7 +275,7 @@
                         checked={entry.status === 'nao'}
                         onChange={() => onChecklistStatusChange(index, 'nao')}
                       />
-                      <span>Nao</span>
+                      <span title="Não">❌</span>
                     </label>
                     {shouldShowNote(entry, index) ? (
                       <input
@@ -273,7 +312,8 @@
             </button>
             <button className="btn btn-muted" type="button" onClick={onBack}>Voltar</button>
             <button className="btn btn-outline" type="button" onClick={() => onPrint('a4')}>Imprimir A4</button>
-            <button className="btn btn-outline" type="button" onClick={() => onPrint('thermal')}>Imprimir 58mm</button>
+            <button className="btn btn-outline" type="button" onClick={() => onPrint('thermal58')}>Imprimir 58mm</button>
+            <button className="btn btn-outline" type="button" onClick={() => onPrint('thermal38')}>Imprimir 38mm</button>
             <button className="btn btn-ghost" type="button" onClick={onResetChecklist}>Reiniciar Checklist</button>
             <button className="btn btn-ghost" type="button" onClick={onResetForm}>Limpar Formulario</button>
           </div>

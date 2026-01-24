@@ -7,7 +7,7 @@ const parseValue = (value) => {
   return Number.isNaN(numeric) ? 0 : numeric;
 };
 
-function WarrantyForm() {
+function WarrantyForm({ onBack }) {
   const [form, setForm] = useState({
     data: new Date().toISOString().slice(0, 10),
     nome: '',
@@ -26,7 +26,9 @@ function WarrantyForm() {
     return parseValue(form.valorProduto) - parseValue(form.desconto);
   }, [form.valorProduto, form.desconto]);
 
-  const handlePrint = () => {
+  const handlePrint = (mode = 'thermal58') => {
+    const pageWidth = mode === 'thermal38' ? '38mm' : '58mm';
+    const fontSize = mode === 'thermal38' ? '10px' : '11px';
     const date = form.data ? form.data.split('-').reverse().join('/') : '-';
 
     const html = `
@@ -36,12 +38,16 @@ function WarrantyForm() {
           <meta charset="UTF-8" />
           <title>Garantia</title>
           <style>
-            body { font-family: Arial, sans-serif; font-size: 11px; }
-            .cupom { width: 58mm; margin: 0 auto; }
+            body { font-family: Arial, sans-serif; font-size: ${fontSize}; }
+            .cupom { width: ${pageWidth}; margin: 0 auto; }
             .center { text-align: center; }
             .line { border-top: 1px dashed #333; margin: 6px 0; }
             .bold { font-weight: bold; }
-            footer { font-size: 10px; text-align: justify; }
+            footer { font-size: 9px; text-align: justify; }
+            @media print {
+              @page { size: ${pageWidth} auto; margin: 6mm; }
+              body { margin: 0; }
+            }
           </style>
         </head>
         <body>
@@ -211,7 +217,9 @@ function WarrantyForm() {
         </div>
 
         <div className="form-actions">
-          <button className="btn btn-accent" type="button" onClick={handlePrint}>Imprimir 58mm</button>
+          <button className="btn btn-accent" type="button" onClick={() => handlePrint('thermal58')}>Imprimir 58mm</button>
+          <button className="btn btn-accent" type="button" onClick={() => handlePrint('thermal38')}>Imprimir 38mm</button>
+          <button className="btn btn-muted" type="button" onClick={onBack}>Voltar</button>
         </div>
       </div>
     </div>
