@@ -11,6 +11,7 @@ function OsList({
   onEdit,
   onPrint,
   onDelete,
+  onBack,
 }) {
   return (
     <div className="page">
@@ -24,6 +25,7 @@ function OsList({
             {loading ? 'Atualizando...' : 'Atualizar'}
           </button>
           <button className="btn btn-accent" type="button" onClick={onExport}>Exportar Excel</button>
+          <button className="btn btn-muted" type="button" onClick={onBack}>Voltar</button>
         </div>
       </div>
 
@@ -71,18 +73,10 @@ function OsList({
                         <button 
                           className="btn btn-ghost btn-small" 
                           type="button" 
-                          onClick={() => onPrint(order, 'thermal')}
+                          onClick={() => onPrint(order, 'thermal58')}
                           title="Imprimir 58mm"
                         >
                           58mm
-                        </button>
-                        <button 
-                          className="btn btn-ghost btn-small" 
-                          type="button" 
-                          onClick={() => onPrint(order, 'thermal38')}
-                          title="Imprimir 38mm"
-                        >
-                          38mm
                         </button>
                         <button 
                           className="btn btn-ghost btn-small" 

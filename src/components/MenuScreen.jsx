@@ -1,6 +1,6 @@
 ﻿function MenuScreen({ onMessage, onOpenOs, onOpenList, menuMessage }) {
   return (
-    <section className="menu-panel">
+    <section className="menu-panel menu-panel-centered">
       <div className="menu-title">D-Tech Utilities & Tools</div>
       <div className="menu-subtitle">CNPJ: 37.183.737/0001-05</div>
       <div className="menu-actions">

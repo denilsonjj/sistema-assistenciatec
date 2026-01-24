@@ -1,5 +1,5 @@
-﻿const NAV_ITEMS = [
-  // { id: 'dashboard', label: 'Dashboard' }, // Oculto temporariamente
+const NAV_ITEMS = [
+  { id: 'menu', label: 'Inicio' },
   { id: 'openOrder', label: 'Abrir OS' },
   { id: 'list', label: 'Listagem OS' },
   { id: 'closeOrder', label: 'Finalizar OS' },
@@ -10,7 +10,10 @@
 
 function Sidebar({ activeView, isOpen, onNavigate, onOpenPdv, onLogout }) {
   return (
-    <aside id="app-sidebar" className={`sidebar ${isOpen ? 'open' : ''}`}>
+    <aside
+      id="app-sidebar"
+      className={`sidebar ${isOpen ? 'open' : ''}`}
+    >
       <div className="brand">
         <img className="brand-logo" src="/logo.png" alt="D-Tech" />
         <div className="brand-text">
@@ -41,6 +44,3 @@ function Sidebar({ activeView, isOpen, onNavigate, onOpenPdv, onLogout }) {
 }
 
 export default Sidebar;
-
-
-

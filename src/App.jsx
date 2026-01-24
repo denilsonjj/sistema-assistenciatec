@@ -21,7 +21,6 @@ import {
 import { downloadCsv } from './utils/export';
 import Sidebar from './components/Sidebar';
 import Notice from './components/Notice';
-import Dashboard from './components/Dashboard';
 import OsForm from './components/OsForm';
 import OsList from './components/OsList';
 import EstimateForm from './components/EstimateForm';
@@ -32,7 +31,7 @@ import Login from './components/Login';
 import './App.css';
 
 function App() {
-  const [view, setView] = useState('dashboard');
+  const [view, setView] = useState('menu');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [orders, setOrders] = useState([]);
   const [search, setSearch] = useState('');
@@ -44,7 +43,7 @@ function App() {
   const [authNotice, setAuthNotice] = useState(null);
   const [form, setForm] = useState(() => createEmptyForm());
   const viewLabels = {
-    dashboard: 'Dashboard',
+    menu: 'Inicio',
     openOrder: 'Abrir OS',
     list: 'Listagem OS',
     closeOrder: 'Finalizar OS',
@@ -200,7 +199,7 @@ function App() {
     setOrders([]);
     setSearch('');
     setNotice(null);
-    setView('dashboard');
+    setView('menu');
   };
 
   const handleSubmit = async (event) => {
@@ -296,7 +295,8 @@ function App() {
     setSidebarOpen(false);
   };
 
-  const pageTitle = viewLabels[view] || 'Dashboard';
+  const pageTitle = viewLabels[view] || 'Inicio';
+  const isMenu = view === 'menu';
 
   if (!isAuthenticated) {
     return (
@@ -308,7 +308,7 @@ function App() {
 
   return (
     <div className="app">
-      <div className="app-shell">
+      <div className={`app-shell ${isMenu ? 'menu-shell' : ''}`}>
         <div
           className={`sidebar-backdrop ${sidebarOpen ? 'show' : ''}`}
           role="presentation"
@@ -321,67 +321,65 @@ function App() {
           onOpenPdv={handleOpenPdv}
           onLogout={handleLogout}
         />
-        <main className="main">
-          <header className="topbar">
-            <button
-              className="hamburger"
-              type="button"
-              aria-label="Abrir menu"
-              aria-expanded={sidebarOpen}
-              aria-controls="app-sidebar"
-              onClick={() => setSidebarOpen(true)}
-            >
-              <span />
-              <span />
-              <span />
-            </button>
-            <div className="topbar-title">{pageTitle}</div>
-          </header>
-          <Notice notice={notice} />
-          {/* Dashboard oculto temporariamente */}
-          {/* {view === 'dashboard' ? <Dashboard onNavigate={handleNavigate} /> : null} */}
-          {view === 'openOrder' ? (
-            <OsForm
-              form={form}
-              orders={orders}
-              statusOptions={STATUS_OPTIONS}
-              checklistItems={CHECKLIST_ITEMS}
-              saving={saving}
-              onFieldChange={handleFieldChange}
-              onChecklistStatusChange={handleChecklistStatusChange}
-              onChecklistNoteChange={handleChecklistNoteChange}
-              onPatternToggle={handlePatternToggle}
-              onSubmit={handleSubmit}
-              onBack={() => handleNavigate('dashboard')}
-              onPrint={(mode) => handlePrint(buildOrderForPrint(form), mode)}
-              onResetChecklist={handleResetChecklist}
-              onResetForm={handleResetForm}
-            />
-          ) : null}
-          {view === 'list' ? (
-            <OsList
-              orders={filteredOrders}
-              search={search}
-              loading={loadingList}
-              onSearchChange={(event) => setSearch(event.target.value)}
-              onRefresh={() => loadOrders(false)}
-              onExport={handleExport}
-              onEdit={handleEdit}
-              onPrint={handlePrint}
-              onDelete={handleDelete}
-            />
-          ) : null}
-          {view === 'estimate' ? <EstimateForm onBack={() => handleNavigate('dashboard')} /> : null}
-          {view === 'warranty' ? <WarrantyForm onBack={() => handleNavigate('dashboard')} /> : null}
-          {view === 'closeOrder' ? <CloseOrderForm orders={orders} onBack={() => handleNavigate('dashboard')} /> : null}
-          {view === 'buyPhone' ? <BuyPhoneForm onBack={() => handleNavigate('dashboard')} /> : null}
-        </main>
+        {!isMenu ? (
+          <main className="main">
+            <header className="topbar">
+              <button
+                className="hamburger"
+                type="button"
+                aria-label="Abrir menu"
+                aria-expanded={sidebarOpen}
+                aria-controls="app-sidebar"
+                onClick={() => setSidebarOpen(true)}
+              >
+                <span />
+                <span />
+                <span />
+              </button>
+              <div className="topbar-title">{pageTitle}</div>
+            </header>
+            <Notice notice={notice} />
+            {view === 'openOrder' ? (
+              <OsForm
+                form={form}
+                orders={orders}
+                statusOptions={STATUS_OPTIONS}
+                checklistItems={CHECKLIST_ITEMS}
+                saving={saving}
+                onFieldChange={handleFieldChange}
+                onChecklistStatusChange={handleChecklistStatusChange}
+                onChecklistNoteChange={handleChecklistNoteChange}
+                onPatternToggle={handlePatternToggle}
+                onSubmit={handleSubmit}
+                onBack={() => handleNavigate('menu')}
+                onPrint={(mode) => handlePrint(buildOrderForPrint(form), mode)}
+                onResetChecklist={handleResetChecklist}
+                onResetForm={handleResetForm}
+              />
+            ) : null}
+            {view === 'list' ? (
+              <OsList
+                orders={filteredOrders}
+                search={search}
+                loading={loadingList}
+                onSearchChange={(event) => setSearch(event.target.value)}
+                onRefresh={() => loadOrders(false)}
+                onExport={handleExport}
+                onEdit={handleEdit}
+                onPrint={handlePrint}
+                onDelete={handleDelete}
+                onBack={() => handleNavigate('menu')}
+              />
+            ) : null}
+            {view === 'estimate' ? <EstimateForm onBack={() => handleNavigate('menu')} /> : null}
+            {view === 'warranty' ? <WarrantyForm onBack={() => handleNavigate('menu')} /> : null}
+            {view === 'closeOrder' ? <CloseOrderForm orders={orders} onBack={() => handleNavigate('menu')} /> : null}
+            {view === 'buyPhone' ? <BuyPhoneForm onBack={() => handleNavigate('menu')} /> : null}
+          </main>
+        ) : null}
       </div>
     </div>
   );
 }
 
 export default App;
-
-
-

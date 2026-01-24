@@ -313,7 +313,6 @@ function OsForm({
             <button className="btn btn-muted" type="button" onClick={onBack}>Voltar</button>
             <button className="btn btn-outline" type="button" onClick={() => onPrint('a4')}>Imprimir A4</button>
             <button className="btn btn-outline" type="button" onClick={() => onPrint('thermal58')}>Imprimir 58mm</button>
-            <button className="btn btn-outline" type="button" onClick={() => onPrint('thermal38')}>Imprimir 38mm</button>
             <button className="btn btn-ghost" type="button" onClick={onResetChecklist}>Reiniciar Checklist</button>
             <button className="btn btn-ghost" type="button" onClick={onResetForm}>Limpar Formulario</button>
           </div>

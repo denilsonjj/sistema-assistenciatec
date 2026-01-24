@@ -407,25 +407,75 @@ export const buildPrintHtml = (order, mode) => {
   const pagamento = order.extras?.pagamento || '';
   const dataTermino = order.extras?.dataTermino || '';
   const padrao = order.extras?.padrao || [];
-  
+  const senha = order.extras?.senha || '';
+  const dataAbertura = formatDate(order.data) || '';
+
+  if (mode === 'thermal58') {
+    const gateIndex = 3;
+    const gateNao = checklist[gateIndex]?.status === 'nao';
+    const avisoSistema = gateNao
+      ? 'O check-list nao pode ser efetuado devido a limitacoes do aparelho, impossibilitando o acesso ao sistema, portanto a garantia sera unica e exclusivamente sobre o servico prestado.'
+      : '';
+    const issues = checklist
+      .map((item, index) => {
+        if (gateNao && index >= 4 && index <= 24) return '';
+        if (item.status !== 'alerta' && item.status !== 'nao') return '';
+        let textoItem = CHECKLIST_ITEMS[index] || '';
+        if (item.status === 'nao') {
+          textoItem += ': Nao';
+        }
+        if (item.note) {
+          textoItem += `: ${item.note}`;
+        }
+        const icon = item.status === 'nao' ? 'X' : '!';
+        return `<div style="font-size:11px;margin-bottom:3px;">${icon} ${textoItem}</div>`;
+      })
+      .filter(Boolean)
+      .join('');
+    const issuesHtml = issues || '<div style="font-size:11px;margin-bottom:3px;">-</div>';
+    return `
+      <!doctype html>
+      <html lang="pt-BR">
+        <head>
+          <meta charset="UTF-8" />
+          <title>Cupom 58mm</title>
+        </head>
+        <body>
+          <div style="font-family:Arial,sans-serif;font-size:12px;padding:5px;width:55mm;">
+            <div style="text-align:center;font-weight:bold;font-size:14px;margin-bottom:5px;">D-Tech Utilities & Tools</div>
+            <div style="text-align:center;font-size:11px;margin-bottom:8px;">
+              Rua do Cruzeiro, 10 - Centro, Capela do Alto<br>
+              WhatsApp: (15) 99644-4174
+            </div>
+            <hr style="border-top:1px dashed #000;">
+            <div style="font-size:11px;margin-bottom:4px;"><b>OS No:</b> ${order.id || '-'}</div>
+            <div style="font-size:11px;margin-bottom:4px;"><b>Cliente:</b> ${order.cliente || '-'}</div>
+            <div style="font-size:11px;margin-bottom:4px;"><b>Contato:</b> ${order.contato || '-'}</div>
+            ${recado ? `<div style="font-size:11px;margin-bottom:4px;"><b>Recado:</b> ${recado}</div>` : ''}
+            <div style="font-size:11px;margin-bottom:4px;"><b>Equipamento:</b> ${aparelho || '-'}</div>
+            <div style="font-size:11px;margin-bottom:4px;"><b>Servico:</b> ${order.servico || '-'}</div>
+            ${dataAbertura ? `<div style="font-size:11px;margin-bottom:4px;"><b>Data Abertura:</b> ${dataAbertura}</div>` : ''}
+            ${dataTermino ? `<div style="font-size:11px;margin-bottom:4px;"><b>Data Termino:</b> ${formatDate(dataTermino)}</div>` : ''}
+            <div style="font-size:11px;margin-bottom:4px;"><b>Valor:</b> ${formatCurrency(order.valor) || '-'}</div>
+            ${pagamento ? `<div style="font-size:11px;margin-bottom:4px;"><b>Pagamento:</b> ${pagamento}</div>` : ''}
+            <hr style="border-top:1px dashed #000;">
+            <div style="font-weight:bold;margin-bottom:4px;">Atencao, problemas detectados no check-list:</div>
+            ${issuesHtml}
+            ${avisoSistema ? `<div style="margin-top:6px;font-size:11px;color:red;font-weight:bold;">${avisoSistema}</div>` : ''}
+            ${notes ? `<div style="margin-top:6px;font-size:11px;">Observacoes: ${notes}</div>` : ''}
+            <hr style="border-top:1px dashed #000;margin-top:5px;">
+            <div style="text-align:center;font-size:10px;"><b>Apresente este cupom para retirar o aparelho. Retirar em ate 7 dias, sujeito a multa diaria por atraso. Obrigado por escolher a D-Tech!</b></div>
+          </div>
+        </body>
+      </html>
+    `;
+  }
+
   let pageWidth = '210mm';
   let pageSize = 'A4';
   let fontSize = '13px';
   let checklistFontSize = '12px';
-  
-  if (mode === 'thermal58') {
-    pageWidth = '58mm';
-    pageSize = '58mm auto';
-    fontSize = '11px';
-    checklistFontSize = '10px';
-  }
-  if (mode === 'thermal38') {
-    pageWidth = '38mm';
-    pageSize = '38mm auto';
-    fontSize = '10px';
-    checklistFontSize = '9px';
-  }
-  
+
   const baseStyles = `
     body { font-family: Arial, sans-serif; color: #111; }
     h1, h2 { margin: 0 0 8px; }
@@ -482,6 +532,7 @@ export const buildPrintHtml = (order, mode) => {
             <div class="line"><span>Servico:</span><span>${order.servico || '-'}</span></div>
             <div class="line"><span>Valor:</span><span>${formatCurrency(order.valor) || '-'}</span></div>
             ${pagamento ? `<div class="line"><span>Pagamento:</span><span>${pagamento}</span></div>` : ''}
+            ${senha ? `<div class="line"><span>Senha/PIN:</span><span>${senha}</span></div>` : ''}
             <div class="line"><span>Status:</span><span>${order.status || '-'}</span></div>
           </div>
           ${checklistSection}
@@ -496,4 +547,3 @@ export const buildPrintHtml = (order, mode) => {
     </html>
   `;
 };
-

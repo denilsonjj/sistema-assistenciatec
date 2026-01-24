@@ -29,9 +29,9 @@ function EstimateForm({ onBack }) {
     setServices((prev) => [...prev, createService()]);
   };
 
-  const handlePrint = (mode = 'thermal58') => {
-    const pageWidth = mode === 'thermal38' ? '38mm' : '58mm';
-    const fontSize = mode === 'thermal38' ? '10px' : '11px';
+  const handlePrint = () => {
+    const pageWidth = '58mm';
+    const fontSize = '11px';
     
     const itemsHtml = services
       .filter((item) => item.desc || item.value)
@@ -153,8 +153,7 @@ function EstimateForm({ onBack }) {
         </div>
 
         <div className="form-actions">
-          <button className="btn btn-accent" type="button" onClick={() => handlePrint('thermal58')}>Imprimir 58mm</button>
-          <button className="btn btn-accent" type="button" onClick={() => handlePrint('thermal38')}>Imprimir 38mm</button>
+          <button className="btn btn-accent" type="button" onClick={handlePrint}>Imprimir 58mm</button>
           <button className="btn btn-muted" type="button" onClick={onBack}>Voltar</button>
         </div>
       </div>
@@ -163,6 +162,5 @@ function EstimateForm({ onBack }) {
 }
 
 export default EstimateForm;
-
 
 

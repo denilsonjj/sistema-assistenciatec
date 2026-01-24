@@ -16,19 +16,21 @@ function Dashboard({ onNavigate }) {
           <div className="page-subtitle">Atalhos rapidos para o dia a dia.</div>
         </div>
       </div>
-      <div className="action-grid">
-        {ACTIONS.map((action) => (
-          <button
-            key={action.id}
-            type="button"
-            className="action-card"
-            onClick={() => onNavigate(action.id)}
-          >
-            <div className="action-title">{action.title}</div>
-            <div className="action-desc">{action.desc}</div>
-            <div className="action-cta">Abrir</div>
-          </button>
-        ))}
+      <div className="dashboard-actions">
+        <div className="action-grid">
+          {ACTIONS.map((action) => (
+            <button
+              key={action.id}
+              type="button"
+              className="action-card"
+              onClick={() => onNavigate(action.id)}
+            >
+              <div className="action-title">{action.title}</div>
+              <div className="action-desc">{action.desc}</div>
+              <div className="action-cta">Abrir</div>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );

@@ -26,9 +26,9 @@ function WarrantyForm({ onBack }) {
     return parseValue(form.valorProduto) - parseValue(form.desconto);
   }, [form.valorProduto, form.desconto]);
 
-  const handlePrint = (mode = 'thermal58') => {
-    const pageWidth = mode === 'thermal38' ? '38mm' : '58mm';
-    const fontSize = mode === 'thermal38' ? '10px' : '11px';
+  const handlePrint = () => {
+    const pageWidth = '58mm';
+    const fontSize = '11px';
     const date = form.data ? form.data.split('-').reverse().join('/') : '-';
 
     const html = `
@@ -217,8 +217,7 @@ function WarrantyForm({ onBack }) {
         </div>
 
         <div className="form-actions">
-          <button className="btn btn-accent" type="button" onClick={() => handlePrint('thermal58')}>Imprimir 58mm</button>
-          <button className="btn btn-accent" type="button" onClick={() => handlePrint('thermal38')}>Imprimir 38mm</button>
+          <button className="btn btn-accent" type="button" onClick={handlePrint}>Imprimir 58mm</button>
           <button className="btn btn-muted" type="button" onClick={onBack}>Voltar</button>
         </div>
       </div>
@@ -227,6 +226,5 @@ function WarrantyForm({ onBack }) {
 }
 
 export default WarrantyForm;
-
 
 
