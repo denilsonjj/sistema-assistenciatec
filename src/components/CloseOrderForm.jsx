@@ -19,27 +19,42 @@ function CloseOrderForm({ orders = [], onBack }) {
     contato: '',
     valor: '',
     pagamento: 'Pix',
+    observacao: '',
   });
   const [services, setServices] = useState([createService()]);
+
+  const filteredOrders = useMemo(() => {
+    return orders.filter((order) => {
+      const status = String(order.status || '').toLowerCase();
+      return status.includes('aberta') || status.includes('andamento');
+    });
+  }, [orders]);
 
   // Buscar dados da OS quando uma é selecionada
   const handleOrderSelect = (event) => {
     const orderId = event.target.value;
     setSelectedOrderId(orderId);
 
-    const selectedOrder = orders.find((order) => order.id === orderId);
+    const selectedOrder = filteredOrders.find((order) => order.id === orderId);
     if (selectedOrder) {
       const extras = selectedOrder.extras || {};
+      const cpfValue = extras.cpf || selectedOrder.contato || '';
       setForm({
         os: selectedOrder.id || '',
         data: selectedOrder.data ? selectedOrder.data.split('-').join('-') : new Date().toISOString().slice(0, 10),
         nome: selectedOrder.cliente || '',
-        cpf: extras.cpf || '',
+        cpf: cpfValue,
         contato: selectedOrder.contato || '',
         valor: selectedOrder.valor || '',
-        pagamento: selectedOrder.pagamento || 'Pix',
+        pagamento: extras.pagamento || 'Pix',
+        observacao: '',
       });
-      setServices([createService()]);
+      setServices([
+        {
+          desc: selectedOrder.servico || '',
+          value: '',
+        },
+      ]);
     }
   };
 
@@ -120,6 +135,7 @@ function CloseOrderForm({ orders = [], onBack }) {
               </tr>
             </table>
             <div class="line"></div>
+            ${form.observacao ? `<div><strong>Observacao:</strong> ${form.observacao}</div>` : ''}
             <footer>
               Este servico possui garantia de 90 dias a partir da conclusao, valida apenas para o servico prestado.
               A garantia e anulada em casos de mau uso, quedas, oxidacao ou violacao do aparelho por terceiros.
@@ -156,7 +172,7 @@ function CloseOrderForm({ orders = [], onBack }) {
               onChange={handleOrderSelect}
             >
               <option value="">-- Selecione uma OS --</option>
-              {orders.map((order) => (
+              {filteredOrders.map((order) => (
                 <option key={order.id} value={order.id}>
                   {order.id} - {order.cliente || 'Sem nome'}
                 </option>
@@ -232,6 +248,16 @@ function CloseOrderForm({ orders = [], onBack }) {
               <option>Dinheiro</option>
               <option>Credito parcelado (com taxa)</option>
             </select>
+          </label>
+          <label className="field full">
+            <span>Observacao</span>
+            <textarea
+              className="input textarea"
+              rows="3"
+              value={form.observacao}
+              onChange={(event) => setForm({ ...form, observacao: event.target.value })}
+              placeholder="Observacoes finais"
+            />
           </label>
         </div>
 

@@ -11,6 +11,8 @@ function OsList({
   onEdit,
   onPrint,
   onDelete,
+  statusOptions = [],
+  onStatusChange,
   onBack,
 }) {
   return (
@@ -62,9 +64,16 @@ function OsList({
                   <td data-label="Cliente">{order.cliente}</td>
                   <td data-label="Aparelho" className="hide-mobile">{order.aparelho}</td>
                   <td data-label="Status">
-                    <span className={`status-pill ${getStatusClass(order.status)}`}>
-                      {order.status}
-                    </span>
+                    <select
+                      className={`status-pill status-select ${getStatusClass(order.status)}`}
+                      value={order.status}
+                      onChange={(event) => onStatusChange?.(order, event.target.value)}
+                      aria-label="Alterar status"
+                    >
+                      {statusOptions.map((status) => (
+                        <option key={status} value={status}>{status}</option>
+                      ))}
+                    </select>
                   </td>
                   <td data-label="Valor" className="hide-mobile">{formatCurrency(order.valor)}</td>
                   <td data-label="Ações" className="actions">

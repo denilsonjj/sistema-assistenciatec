@@ -154,11 +154,47 @@ function App() {
     }));
   };
 
+  const parseOrderDate = (value) => {
+    if (!value) return 0;
+    const direct = new Date(value);
+    if (!Number.isNaN(direct.getTime())) {
+      return direct.getTime();
+    }
+    if (typeof value === 'string' && value.includes('/')) {
+      const parts = value.split('/');
+      if (parts.length === 3) {
+        const normalized = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+        if (!Number.isNaN(normalized.getTime())) {
+          return normalized.getTime();
+        }
+      }
+    }
+    return 0;
+  };
+
+  const parseOrderIdDate = (id) => {
+    const match = String(id || '').match(/^(\d{4})(\d{2})(\d{2})/);
+    if (!match) return 0;
+    const parsed = new Date(`${match[1]}-${match[2]}-${match[3]}`);
+    return Number.isNaN(parsed.getTime()) ? 0 : parsed.getTime();
+  };
+
+  const sortOrders = (list) => {
+    return [...list].sort((a, b) => {
+      const timeA = parseOrderDate(a.data) || parseOrderIdDate(a.id);
+      const timeB = parseOrderDate(b.data) || parseOrderIdDate(b.id);
+      if (timeA !== timeB) {
+        return timeB - timeA;
+      }
+      return String(b.id || '').localeCompare(String(a.id || ''), 'pt-BR');
+    });
+  };
+
   const loadOrders = async (silent) => {
     setLoadingList(!silent);
     try {
       const data = await fetchOrders();
-      const list = Array.isArray(data) ? data.map(normalizeOrder) : [];
+      const list = Array.isArray(data) ? sortOrders(data.map(normalizeOrder)) : [];
       setOrders(list);
       if (!silent) {
         setNotice(null);
@@ -241,6 +277,7 @@ function App() {
     try {
       await deleteOrder(order.id);
       setNotice({ type: 'success', text: `OS ${order.id} deletada com sucesso.` });
+      setOrders((prev) => prev.filter((item) => item.id !== order.id));
       await loadOrders(false);
     } catch (error) {
       setNotice({ type: 'error', text: error.message });
@@ -250,6 +287,28 @@ function App() {
       }
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleStatusChange = async (order, nextStatus) => {
+    if (!order || !nextStatus || order.status === nextStatus) return;
+    const prevStatus = order.status;
+    setOrders((prev) =>
+      prev.map((item) => (item.id === order.id ? { ...item, status: nextStatus } : item))
+    );
+    try {
+      const formData = { ...toFormFromOrder(order), status: nextStatus };
+      await saveOrder(buildPayload(formData));
+      setNotice({ type: 'success', text: `Status atualizado para ${nextStatus}.` });
+    } catch (error) {
+      setOrders((prev) =>
+        prev.map((item) => (item.id === order.id ? { ...item, status: prevStatus } : item))
+      );
+      setNotice({ type: 'error', text: error.message });
+      if (String(error.message || '').toLowerCase().includes('token')) {
+        setStoredToken('');
+        setIsAuthenticated(false);
+      }
     }
   };
 
@@ -357,20 +416,22 @@ function App() {
                 onResetForm={handleResetForm}
               />
             ) : null}
-            {view === 'list' ? (
-              <OsList
-                orders={filteredOrders}
-                search={search}
-                loading={loadingList}
-                onSearchChange={(event) => setSearch(event.target.value)}
-                onRefresh={() => loadOrders(false)}
-                onExport={handleExport}
-                onEdit={handleEdit}
-                onPrint={handlePrint}
-                onDelete={handleDelete}
-                onBack={() => handleNavigate('menu')}
-              />
-            ) : null}
+          {view === 'list' ? (
+            <OsList
+              orders={filteredOrders}
+              search={search}
+              loading={loadingList}
+              onSearchChange={(event) => setSearch(event.target.value)}
+              onRefresh={() => loadOrders(false)}
+              onExport={handleExport}
+              onEdit={handleEdit}
+              onPrint={handlePrint}
+              onDelete={handleDelete}
+              statusOptions={STATUS_OPTIONS}
+              onStatusChange={handleStatusChange}
+              onBack={() => handleNavigate('menu')}
+            />
+          ) : null}
             {view === 'estimate' ? <EstimateForm onBack={() => handleNavigate('menu')} /> : null}
             {view === 'warranty' ? <WarrantyForm onBack={() => handleNavigate('menu')} /> : null}
             {view === 'closeOrder' ? <CloseOrderForm orders={orders} onBack={() => handleNavigate('menu')} /> : null}

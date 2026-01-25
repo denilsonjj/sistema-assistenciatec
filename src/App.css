@@ -896,6 +896,20 @@
   white-space: nowrap;
 }
 
+.status-select {
+  border: none;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 18px;
+}
+
+.status-select:focus {
+  outline: 2px solid rgba(0, 31, 77, 0.2);
+  outline-offset: 2px;
+}
+
 .status-aberta {
   background: rgba(212, 71, 60, 0.12);
   color: var(--danger);
