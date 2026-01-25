@@ -450,7 +450,7 @@ export const buildPrintHtml = (order, mode) => {
             <hr style="border-top:1px dashed #000;">
             <div style="font-size:11px;margin-bottom:4px;"><b>OS No:</b> ${order.id || '-'}</div>
             <div style="font-size:11px;margin-bottom:4px;"><b>Cliente:</b> ${order.cliente || '-'}</div>
-            <div style="font-size:11px;margin-bottom:4px;"><b>Contato:</b> ${order.contato || '-'}</div>
+            <div style="font-size:11px;margin-bottom:4px;"><b>CPF:</b> ${order.contato || '-'}</div>
             ${recado ? `<div style="font-size:11px;margin-bottom:4px;"><b>Recado:</b> ${recado}</div>` : ''}
             <div style="font-size:11px;margin-bottom:4px;"><b>Equipamento:</b> ${aparelho || '-'}</div>
             <div style="font-size:11px;margin-bottom:4px;"><b>Servico:</b> ${order.servico || '-'}</div>
@@ -525,7 +525,7 @@ export const buildPrintHtml = (order, mode) => {
           <div class="divider"></div>
           <div class="block">
             <div class="line"><span>Cliente:</span><span>${order.cliente || '-'}</span></div>
-            <div class="line"><span>Contato:</span><span>${order.contato || '-'}</span></div>
+            <div class="line"><span>CPF:</span><span>${order.contato || '-'}</span></div>
             ${recado ? `<div class="line"><span>Recado:</span><span>${recado}</span></div>` : ''}
             <div class="line"><span>Aparelho:</span><span>${aparelho || '-'}</span></div>
             <div class="line"><span>Defeito:</span><span>${order.defeito || '-'}</span></div>

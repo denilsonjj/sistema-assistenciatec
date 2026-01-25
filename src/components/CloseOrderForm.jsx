@@ -1,5 +1,5 @@
 ﻿import { useMemo, useState } from 'react';
-import { formatCurrency } from '../utils/format';
+import { formatCurrency, formatDate } from '../utils/format';
 
 const createService = () => ({ desc: '', value: '' });
 
@@ -15,7 +15,6 @@ function CloseOrderForm({ orders = [], onBack }) {
     os: '',
     data: new Date().toISOString().slice(0, 10),
     nome: '',
-    cpf: '',
     contato: '',
     valor: '',
     pagamento: 'Pix',
@@ -43,8 +42,7 @@ function CloseOrderForm({ orders = [], onBack }) {
         os: selectedOrder.id || '',
         data: selectedOrder.data ? selectedOrder.data.split('-').join('-') : new Date().toISOString().slice(0, 10),
         nome: selectedOrder.cliente || '',
-        cpf: cpfValue,
-        contato: selectedOrder.contato || '',
+        contato: cpfValue,
         valor: selectedOrder.valor || '',
         pagamento: extras.pagamento || 'Pix',
         observacao: '',
@@ -88,7 +86,7 @@ function CloseOrderForm({ orders = [], onBack }) {
       })
       .join('');
 
-    const date = form.data ? form.data.split('-').reverse().join('/') : '-';
+    const date = formatDate(form.data) || '-';
 
     const html = `
       <!doctype html>
@@ -119,7 +117,7 @@ function CloseOrderForm({ orders = [], onBack }) {
             <div><strong>OS:</strong> ${form.os || '-'}</div>
             <div><strong>Data:</strong> ${date}</div>
             <div><strong>Cliente:</strong> ${form.nome || '-'}</div>
-            <div><strong>CPF:</strong> ${form.cpf || '-'}</div>
+            <div><strong>CPF:</strong> ${form.contato || '-'}</div>
             <div class="line"></div>
             <div><strong>Servicos realizados:</strong></div>
             <div>${itemsHtml || '-'}</div>
@@ -212,18 +210,9 @@ function CloseOrderForm({ orders = [], onBack }) {
             <span>CPF</span>
             <input
               className="input"
-              value={form.cpf}
-              onChange={(event) => setForm({ ...form, cpf: event.target.value })}
-              placeholder="000.000.000-00"
-            />
-          </label>
-          <label className="field">
-            <span>Telefone / Contato</span>
-            <input
-              className="input"
               value={form.contato}
               onChange={(event) => setForm({ ...form, contato: event.target.value })}
-              placeholder="(00) 90000-0000"
+              placeholder="000.000.000-00"
             />
           </label>
           <label className="field">

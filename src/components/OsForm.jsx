@@ -115,13 +115,13 @@ function OsForm({
                   />
                 </label>
                 <label className="field">
-                  <span>Celular / CPF</span>
+                  <span>CPF</span>
                   <input
                     className="input"
                     type="text"
                     value={form.contato}
                     onChange={onFieldChange('contato')}
-                    placeholder="(00) 90000-0000 ou CPF"
+                    placeholder="000.000.000-00"
                   />
                 </label>
                 <label className="field">
@@ -323,5 +323,4 @@ function OsForm({
 }
 
 export default OsForm;
-
 
