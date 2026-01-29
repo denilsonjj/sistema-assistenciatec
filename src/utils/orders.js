@@ -63,6 +63,7 @@ export const createEmptyForm = () => ({
 
 export const getStatusClass = (status) => {
   const normalized = String(status || '').toLowerCase();
+  if (normalized.includes('cancel')) return 'status-cancelada';
   if (normalized.includes('andamento')) return 'status-andamento';
   if (normalized.includes('finalizada')) return 'status-finalizada';
   return 'status-aberta';

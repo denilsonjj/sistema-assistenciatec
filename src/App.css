@@ -879,6 +879,10 @@
   background: rgba(31, 139, 76, 0.08);
 }
 
+.os-table tr.status-cancelada {
+  background: rgba(130, 140, 155, 0.12);
+}
+
 .table-responsive {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -923,6 +927,11 @@
 .status-finalizada {
   background: rgba(31, 139, 76, 0.16);
   color: var(--success);
+}
+
+.status-cancelada {
+  background: rgba(130, 140, 155, 0.22);
+  color: #4b5563;
 }
 
 .action-buttons {

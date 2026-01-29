@@ -1,5 +1,1 @@
-﻿export const STATUS_OPTIONS = ['Aberta', 'Em Andamento', 'Finalizada'];
-
-
-
-
+export const STATUS_OPTIONS = ['Aberta', 'Em Andamento', 'Finalizada', 'Cancelada'];
